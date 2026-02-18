@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, LogOut } from "lucide-react";
 
 interface Item {
   id: number;
@@ -22,22 +23,41 @@ interface Item {
   created_at: string;
 }
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
 export default function Home() {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    // Check auth status
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.user) {
+          setUser(data.user);
+          fetchItems();
+        } else {
+          router.push("/login");
+        }
+      })
+      .catch(() => router.push("/login"))
+      .finally(() => setLoading(false));
+  }, [router]);
+
   const fetchItems = async () => {
     const res = await fetch("/api/items");
     const data = await res.json();
     setItems(data);
-    setLoading(false);
   };
-
-  useEffect(() => {
-    fetchItems();
-  }, []);
 
   const addItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,16 +79,34 @@ export default function Home() {
     fetchItems();
   };
 
+  const logout = async () => {
+    await fetch("/api/auth/me", { method: "DELETE" });
+    router.push("/login");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-background p-8">
       <div className="mx-auto max-w-2xl space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Full-Stack Template
-          </h1>
-          <p className="text-muted-foreground">
-            Next.js + Drizzle ORM + sql.js + shadcn/ui
-          </p>
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight">
+              Full-Stack Template
+            </h1>
+            <p className="text-muted-foreground">
+              Welcome, {user?.name}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={logout}>
+            <LogOut className="mr-1 h-4 w-4" /> Logout
+          </Button>
         </div>
 
         <Card>
@@ -104,9 +142,7 @@ export default function Home() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <p className="text-muted-foreground text-sm">Loading...</p>
-            ) : items.length === 0 ? (
+            {items.length === 0 ? (
               <p className="text-muted-foreground text-sm">
                 No items yet. Add one above.
               </p>

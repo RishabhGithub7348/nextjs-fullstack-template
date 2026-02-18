@@ -1,9 +1,10 @@
-This is a Next.js 14 full-stack template with SQLite database support.
+This is a Next.js 14 full-stack template with SQLite database and authentication.
 
 STACK:
 - Next.js 14 (App Router, TypeScript)
 - Tailwind CSS + shadcn/ui (pre-installed components)
 - SQLite via sql.js (WASM) + Drizzle ORM
+- Authentication: bcryptjs + JWT (HttpOnly cookies)
 - Database persisted to database.sqlite file
 
 PRE-INSTALLED shadcn COMPONENTS:
@@ -11,25 +12,41 @@ button, card, input, label, table, dialog, form, badge, separator, tabs, sonner
 Import from: @/components/ui/{component}
 To add more: create the component file in src/components/ui/ (do NOT run npx shadcn add)
 
+AUTHENTICATION (pre-built):
+- POST /api/auth/signup — { name, email, password } → creates user, sets JWT cookie
+- POST /api/auth/login — { email, password } → verifies, sets JWT cookie
+- GET /api/auth/me — returns current user from JWT cookie
+- DELETE /api/auth/me — logout (clears cookie)
+- Auth utility: src/lib/auth.ts (signToken, verifyToken, getAuthUser)
+- Pages: /login and /signup (pre-built with shadcn components)
+- Home page (/) checks auth and redirects to /login if not authenticated
+
+To protect an API route:
+  import { getAuthUser } from "@/lib/auth";
+  const user = await getAuthUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
 DATABASE SETUP (src/db/):
-- src/db/schema.ts — Drizzle table definitions (add new tables here)
+- src/db/schema.ts — Drizzle table definitions (users + items tables)
 - src/db/index.ts — Database initialization (getDb, saveDb)
 - Always call saveDb() after INSERT/UPDATE/DELETE to persist changes
 
 ADDING A NEW TABLE:
 1. Define schema in src/db/schema.ts:
-   export const users = sqliteTable("users", {
+   export const posts = sqliteTable("posts", {
      id: integer("id").primaryKey({ autoIncrement: true }),
-     email: text("email").notNull(),
+     title: text("title").notNull(),
+     userId: integer("user_id").references(() => users.id),
    });
 
 2. Add CREATE TABLE in src/db/index.ts (inside getDb function):
-   sqliteDb.run(`CREATE TABLE IF NOT EXISTS users (
+   sqliteDb.run(`CREATE TABLE IF NOT EXISTS posts (
      id INTEGER PRIMARY KEY AUTOINCREMENT,
-     email TEXT NOT NULL
+     title TEXT NOT NULL,
+     user_id INTEGER REFERENCES users(id)
    );`);
 
-3. Create API route in src/app/api/users/route.ts
+3. Create API route in src/app/api/posts/route.ts
 
 CREATING API ROUTES:
 - Use Next.js App Router route handlers (src/app/api/*)
@@ -37,11 +54,14 @@ CREATING API ROUTES:
 - Import table schemas from "@/db/schema"
 - Use Drizzle query builder: db.select().from(table).all()
 - Always call saveDb() after mutations
+- Use getAuthUser() from "@/lib/auth" to protect routes
 
 CRITICAL RULES:
 - NEVER use better-sqlite3 (native binary — won't work)
 - NEVER use Prisma (requires native engine binary)
-- NEVER install additional database packages — sql.js + drizzle-orm are already set up
+- NEVER install additional database or auth packages — everything is already set up
 - NEVER run npx shadcn add — create component files manually instead
 - Keep all pages and API routes inside src/app/
 - Use @/ import alias for src/ directory
+- Passwords are hashed with bcryptjs (pure JS, works in WebContainer)
+- JWT tokens are stored in HttpOnly cookies (not localStorage)
