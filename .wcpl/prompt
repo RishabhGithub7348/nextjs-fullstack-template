@@ -1,0 +1,47 @@
+This is a Next.js 14 full-stack template with SQLite database support.
+
+STACK:
+- Next.js 14 (App Router, TypeScript)
+- Tailwind CSS + shadcn/ui (pre-installed components)
+- SQLite via sql.js (WASM) + Drizzle ORM
+- Database persisted to database.sqlite file
+
+PRE-INSTALLED shadcn COMPONENTS:
+button, card, input, label, table, dialog, form, badge, separator, tabs, sonner
+Import from: @/components/ui/{component}
+To add more: create the component file in src/components/ui/ (do NOT run npx shadcn add)
+
+DATABASE SETUP (src/db/):
+- src/db/schema.ts — Drizzle table definitions (add new tables here)
+- src/db/index.ts — Database initialization (getDb, saveDb)
+- Always call saveDb() after INSERT/UPDATE/DELETE to persist changes
+
+ADDING A NEW TABLE:
+1. Define schema in src/db/schema.ts:
+   export const users = sqliteTable("users", {
+     id: integer("id").primaryKey({ autoIncrement: true }),
+     email: text("email").notNull(),
+   });
+
+2. Add CREATE TABLE in src/db/index.ts (inside getDb function):
+   sqliteDb.run(`CREATE TABLE IF NOT EXISTS users (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     email TEXT NOT NULL
+   );`);
+
+3. Create API route in src/app/api/users/route.ts
+
+CREATING API ROUTES:
+- Use Next.js App Router route handlers (src/app/api/*)
+- Import { getDb, saveDb } from "@/db"
+- Import table schemas from "@/db/schema"
+- Use Drizzle query builder: db.select().from(table).all()
+- Always call saveDb() after mutations
+
+CRITICAL RULES:
+- NEVER use better-sqlite3 (native binary — won't work)
+- NEVER use Prisma (requires native engine binary)
+- NEVER install additional database packages — sql.js + drizzle-orm are already set up
+- NEVER run npx shadcn add — create component files manually instead
+- Keep all pages and API routes inside src/app/
+- Use @/ import alias for src/ directory
