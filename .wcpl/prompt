@@ -57,11 +57,12 @@ CREATING API ROUTES:
 - Use getAuthUser() from "@/lib/auth" to protect routes
 
 WEBCONTAINER RULES (this app runs in WebContainer — a browser-based Node.js environment):
-- This template uses Babel (via .babelrc) instead of SWC because SWC native binaries cannot load in WebContainer
-- NEVER add --no-experimental-fetch to NODE_OPTIONS or dev scripts — it disables the Request global which Next.js needs
-- NEVER suggest using SWC, Turbopack (--turbo), or any native Node.js addons
-- NEVER modify .babelrc or remove it — without it, Next.js will try to use SWC and fail
-- NEVER modify next.config.mjs swcMinify setting
+- SWC runs via WASM (@next/swc-wasm-nodejs is pre-installed) — do NOT remove it from package.json
+- NEVER add --no-experimental-fetch to NODE_OPTIONS or dev scripts
+- NEVER use --turbo flag (Turbopack has no WASM build)
+- NEVER install native Node.js addons — they won't work
+- NEVER add a .babelrc file — it breaks next/font and disables SWC WASM
+- NEVER change the "next" version without also updating "@next/swc-wasm-nodejs" to match exactly
 - The dev command is simply: npm run dev (which runs "next dev")
 
 CRITICAL RULES:
