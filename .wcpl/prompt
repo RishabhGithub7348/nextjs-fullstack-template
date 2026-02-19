@@ -57,12 +57,11 @@ CREATING API ROUTES:
 - Use getAuthUser() from "@/lib/auth" to protect routes
 
 WEBCONTAINER RULES (this app runs in WebContainer — a browser-based Node.js environment):
-- SWC runs via WASM (@next/swc-wasm-nodejs is pre-installed) — do NOT remove it from package.json
+- This template uses Babel (.babelrc) instead of SWC — do NOT remove .babelrc
+- NEVER use next/font (import from "next/font/local" or "next/font/google") — it requires SWC which doesn't work here. Use CSS @import for Google Fonts or plain font-family in Tailwind config instead.
 - NEVER add --no-experimental-fetch to NODE_OPTIONS or dev scripts
 - NEVER use --turbo flag (Turbopack has no WASM build)
 - NEVER install native Node.js addons — they won't work
-- NEVER add a .babelrc file — it breaks next/font and disables SWC WASM
-- NEVER change the "next" version without also updating "@next/swc-wasm-nodejs" to match exactly
 - The dev command is simply: npm run dev (which runs "next dev")
 
 CRITICAL RULES:
