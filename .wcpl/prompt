@@ -56,6 +56,14 @@ CREATING API ROUTES:
 - Always call saveDb() after mutations
 - Use getAuthUser() from "@/lib/auth" to protect routes
 
+WEBCONTAINER RULES (this app runs in WebContainer — a browser-based Node.js environment):
+- This template uses Babel (via .babelrc) instead of SWC because SWC native binaries cannot load in WebContainer
+- NEVER add --no-experimental-fetch to NODE_OPTIONS or dev scripts — it disables the Request global which Next.js needs
+- NEVER suggest using SWC, Turbopack (--turbo), or any native Node.js addons
+- NEVER modify .babelrc or remove it — without it, Next.js will try to use SWC and fail
+- NEVER modify next.config.mjs swcMinify setting
+- The dev command is simply: npm run dev (which runs "next dev")
+
 CRITICAL RULES:
 - NEVER use better-sqlite3 (native binary — won't work)
 - NEVER use Prisma (requires native engine binary)
